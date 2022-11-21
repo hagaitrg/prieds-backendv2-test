@@ -13,7 +13,7 @@ var DB_ref = mongoose
     }
   })
   .once('open', function callback() {
-    console.info('Mongo db connected successfully ' + db);
+    console.info('Mongo db connected successfully ' + url);
   });
 
 module.exports = DB_ref;

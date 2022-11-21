@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const stock_read_log = require('../models/stock_read_log');
 const FileSystem = require("fs");
+const { ifError } = require('assert');
 
 router.use('/export-data', async (req, res) => {
   const list = await stock_read_log.aggregate([
@@ -43,7 +44,26 @@ router.use('/import-data', async (req, res) => {
 
 router.use('/edit-repacking-data', async (req, res) => {
   
-  // Silahkan dikerjakan disini.
+  const companyId = req.body.company_id;
+  const reqPayload = req.body.payload;
+  const reject_qr_list = req.body.reject_qr_list;
+  const new_qr_list = req.body.new_qr_list;
+
+  for(var j = 0 ; j < new_qr_list.length; j++){
+    await stock_read_log.updateOne(
+      {company_id: companyId, payload: reqPayload, "qr_list.payload": reject_qr_list[j].payload},
+      {$set:{"qr_list.$.payload": new_qr_list[j].payload}}
+    )
+  }
+
+  for(var i = 0; i < reject_qr_list.length; i++){
+    await stock_read_log.updateOne(
+      {company_id: companyId,qty:1,status:1, "qr_list.payload": new_qr_list[i].payload},
+      {$set:{"qr_list.$.payload": reject_qr_list[i].payload}}
+    );
+  }
+  
+  res.json({statusCode:1, message:"Successfully updated repacking data!"});
 
 })
 

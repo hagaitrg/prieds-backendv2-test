@@ -48,19 +48,23 @@ router.use('/edit-repacking-data', async (req, res) => {
   const reqPayload = req.body.payload;
   const reject_qr_list = req.body.reject_qr_list;
   const new_qr_list = req.body.new_qr_list;
+  var next_payload_counter = reqPayload.slice(-1)
+
+  for(var i = 0; i < reject_qr_list.length; i++){
+    var counter = next_payload_counter++;
+    counter++;
+    var new_payload = reqPayload.slice(0,-1)+counter;
+    await stock_read_log.updateOne(
+      {company_id: companyId,payload:new_payload, "qr_list.payload": new_qr_list[i].payload},
+      {$set:{"qr_list.$.payload": reject_qr_list[i].payload}}
+    );
+  }
 
   for(var j = 0 ; j < new_qr_list.length; j++){
     await stock_read_log.updateOne(
       {company_id: companyId, payload: reqPayload, "qr_list.payload": reject_qr_list[j].payload},
       {$set:{"qr_list.$.payload": new_qr_list[j].payload}}
     )
-  }
-
-  for(var i = 0; i < reject_qr_list.length; i++){
-    await stock_read_log.updateOne(
-      {company_id: companyId,qty:1,status:1, "qr_list.payload": new_qr_list[i].payload},
-      {$set:{"qr_list.$.payload": reject_qr_list[i].payload}}
-    );
   }
   
   res.json({statusCode:1, message:"Successfully updated repacking data!"});
